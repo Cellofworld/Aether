@@ -1,7 +1,14 @@
-FROM node:20-slim AS builder
+FROM node:20-bookworm AS builder
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    openssl \
+    libssl-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -23,10 +30,15 @@ COPY tsconfig.json ./
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
 # Install FFmpeg and runtime dependencies
-RUN apk add --no-cache ffmpeg
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    openssl \
+    libssl3 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
