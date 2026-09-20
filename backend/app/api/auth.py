@@ -96,13 +96,13 @@ async def register(
     return user
 
 
+# Import here to avoid circular dependency
+from app.api.deps import get_current_user as get_current_user_from_token
+
+
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
     current_user: User = Depends(get_current_user_from_token)
 ):
     """Get current user information."""
     return current_user
-
-
-# Import here to avoid circular dependency
-from app.api.deps import get_current_user as get_current_user_from_token

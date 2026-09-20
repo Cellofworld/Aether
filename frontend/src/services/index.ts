@@ -1,7 +1,6 @@
 import apiClient from './api';
 import type { 
   User, 
-  AuthTokens, 
   LoginRequest, 
   Library, 
   MediaItem, 
@@ -10,15 +9,15 @@ import type {
   Season,
   Episode,
   ContinueWatchingItem,
-  SearchResult,
+  SearchResults,
   ScanJob,
   DashboardStats 
 } from '@/types';
 
 // Auth API
 export const authApi = {
-  login: async (data: LoginRequest): Promise<AuthTokens> => {
-    const response = await apiClient.post<AuthTokens>('/auth/login', data);
+  login: async (data: LoginRequest): Promise<{ access_token: string; user: User }> => {
+    const response = await apiClient.post<{ access_token: string; user: User }>('/auth/login', data);
     return response.data;
   },
 
@@ -75,44 +74,44 @@ export const librariesApi = {
 // Media API
 export const mediaApi = {
   getMovies: async (page = 1, limit = 20): Promise<{ items: Movie[]; total: number }> => {
-    const response = await apiClient.get<{ items: Movie[]; total: number }>('/media/movies', {
+    const response = await apiClient.get<{ items: Movie[]; total: number }>('/movies', {
       params: { page, limit },
     });
     return response.data;
   },
 
   getSeries: async (page = 1, limit = 20): Promise<{ items: Series[]; total: number }> => {
-    const response = await apiClient.get<{ items: Series[]; total: number }>('/media/series', {
+    const response = await apiClient.get<{ items: Series[]; total: number }>('/series', {
       params: { page, limit },
     });
     return response.data;
   },
 
   getMovie: async (id: number): Promise<Movie> => {
-    const response = await apiClient.get<Movie>(`/media/movies/${id}`);
+    const response = await apiClient.get<Movie>(`/movies/${id}`);
     return response.data;
   },
 
-  getSeries: async (id: number): Promise<Series> => {
-    const response = await apiClient.get<Series>(`/media/series/${id}`);
+  getSeriesDetail: async (id: number): Promise<Series> => {
+    const response = await apiClient.get<Series>(`/series/${id}`);
     return response.data;
   },
 
   getSeason: async (id: number): Promise<Season> => {
-    const response = await apiClient.get<Season>(`/media/seasons/${id}`);
+    const response = await apiClient.get<Season>(`/seasons/${id}`);
     return response.data;
   },
 
   getEpisodes: async (seasonId: number): Promise<Episode[]> => {
-    const response = await apiClient.get<Episode[]>(`/media/seasons/${seasonId}/episodes`);
+    const response = await apiClient.get<Episode[]>(`/seasons/${seasonId}/episodes`);
     return response.data;
   },
 };
 
 // Search API
 export const searchApi = {
-  search: async (query: string): Promise<SearchResult> => {
-    const response = await apiClient.get<SearchResult>('/search', {
+  search: async (query: string): Promise<SearchResults> => {
+    const response = await apiClient.get<SearchResults>('/search', {
       params: { q: query },
     });
     return response.data;

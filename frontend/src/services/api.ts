@@ -94,10 +94,13 @@ export const adminAPI = {
 export const homeAPI = {
   getHomeData: async () => {
     const [continueWatching, recentlyAdded] = await Promise.all([
-      playbackAPI.getContinueWatching().catch(() => ({ items: [] })),
-      mediaAPI.getRecent(12),
+      playbackAPI.getContinueWatching().catch(() => ({ data: { items: [] } })),
+      mediaAPI.getRecent(12).catch(() => ({ data: { items: [] } })),
     ]);
-    return { continueWatching: continueWatching.items || [], recentlyAdded: recentlyAdded.items || [] };
+    return { 
+      continueWatching: continueWatching.data?.items || [], 
+      recentlyAdded: recentlyAdded.data?.items || [] 
+    };
   },
 };
 
