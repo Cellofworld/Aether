@@ -23,14 +23,19 @@ export async function playbackRoutes(fastify: FastifyInstance) {
       const watched = position >= duration * 0.9; // 90% threshold
       
       // Upsert watch progress
+      const whereClause: { userId: string; mediaItemId?: string; episodeId?: string } = {
+        userId,
+      };
+      
+      if (mediaItemId) {
+        whereClause.mediaItemId = mediaItemId;
+      }
+      if (episodeId) {
+        whereClause.episodeId = episodeId;
+      }
+
       const progress = await prisma.watchProgress.upsert({
-        where: {
-          userId_mediaItemId_episodeId: {
-            userId,
-            mediaItemId: mediaItemId || null,
-            episodeId: episodeId || null,
-          },
-        },
+        where: whereClause as any,
         update: {
           position,
           duration,
@@ -39,8 +44,8 @@ export async function playbackRoutes(fastify: FastifyInstance) {
         },
         create: {
           userId,
-          mediaItemId: mediaItemId || null,
-          episodeId: episodeId || null,
+          mediaItemId: mediaItemId || undefined,
+          episodeId: episodeId || undefined,
           position,
           duration,
           watched,
@@ -128,7 +133,7 @@ export async function playbackRoutes(fastify: FastifyInstance) {
             series: true,
             videoFiles: {
               take: 1,
-              select: { width: true, height: true, posterPath: true },
+              select: { width: true, height: true },
             },
           },
         },

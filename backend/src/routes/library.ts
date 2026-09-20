@@ -69,7 +69,11 @@ export async function libraryRoutes(fastify: FastifyInstance) {
       const body = createLibrarySchema.parse(request.body);
       
       const library = await prisma.library.create({
-        data: body,
+        data: {
+          name: body.name,
+          type: body.type,
+          paths: body.paths,
+        },
       });
       
       reply.code(201).send(library);

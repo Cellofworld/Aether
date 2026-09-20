@@ -1,131 +1,138 @@
-# 🎬 Aether Media Server
+# Aether Media Server
 
-A modern, self-hosted media server inspired by Jellyfin/Plex, built with Node.js, React, and PostgreSQL.
+A self-hosted home media server inspired by Jellyfin/Plex, built with modern technologies.
 
-![Aether Media Server](https://img.shields.io/badge/version-1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+## Features
 
-## ✨ Features
+- 🎬 **Media Library Management** - Automatic scanning of movies, series, anime, cartoons
+- 📺 **Smart TV Support** - Remote-friendly UI with keyboard navigation
+- 🎥 **Video Streaming** - Direct play and transcoding support (HLS)
+- 📝 **Subtitles & Audio Tracks** - Multiple language support
+- ⏯️ **Resume Playback** - Continue watching from where you left off
+- 🔍 **Search & Filters** - Find content quickly
+- 📊 **Metadata** - Automatic metadata from TMDB (posters, descriptions, ratings)
+- 👥 **User Management** - Multi-user support with roles
+- 🐳 **Docker Ready** - Easy deployment with Docker Compose
 
-- **📚 Media Library Management** - Organize movies, TV shows, anime, and more
-- **🎭 Rich Metadata** - Automatic metadata from TMDB (posters, descriptions, ratings)
-- **📺 Smart TV Friendly** - Optimized UI for TV browsers and remote controls
-- **▶️ Video Playback** - Direct play with resume functionality
-- **🔍 Search & Filter** - Find content quickly with powerful search
-- **👥 Multi-User Support** - Individual watch progress and playlists
-- **📱 Responsive Design** - Works on desktop, tablet, mobile, and TV
-- **🐳 Docker Ready** - Easy deployment with Docker Compose
+## Architecture
 
-## 🚀 Quick Start
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Nginx     │────▶│  Frontend   │     │   Backend   │
+│   (Port 80) │     │   (React)   │◀───▶│  (Fastify)  │
+└─────────────┘     └─────────────┘     └──────┬──────┘
+                                               │
+                                        ┌──────▼──────┐
+                                        │  PostgreSQL │
+                                        │  Database   │
+                                        └─────────────┘
+```
+
+## Quick Start
 
 ### Prerequisites
 
 - Docker & Docker Compose
 - Node.js 20+ (for local development)
-- FFmpeg (for transcoding, optional)
+- FFmpeg (for transcoding)
 
-### Installation
+### Docker Deployment
 
-1. **Clone the repository:**
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/aether-media-server.git
+   git clone <repository-url>
    cd aether-media-server
    ```
 
-2. **Create environment file:**
+2. **Configure environment**
    ```bash
    cp .env.example .env
+   # Edit .env and set your JWT_SECRET and TMDB_API_KEY
    ```
 
-3. **Edit `.env` and set your values:**
-   - Change `JWT_SECRET` to a random string
-   - Add your TMDB API key (optional, get from https://www.themoviedb.org)
-   - Set `MEDIA_ROOT` to your media directory
+3. **Get TMDB API Key** (optional but recommended)
+   - Visit https://www.themoviedb.org/settings/api
+   - Create an account and generate an API key
+   - Add it to your `.env` file
 
-4. **Start the server:**
+4. **Start the services**
    ```bash
    docker compose up -d
    ```
 
-5. **Access the application:**
-   - Open http://localhost in your browser
+5. **Access the application**
+   - Open http://localhost (or http://YOUR_SERVER_IP)
    - Default admin credentials: `admin@aether.local` / `admin123`
 
-## 📁 Directory Structure
+### Local Development
+
+```bash
+# Backend
+cd backend
+npm install
+npm run db:generate
+npm run dev
+
+# Frontend (in another terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+## Directory Structure
 
 ```
 aether-media-server/
 ├── backend/           # Node.js + Fastify API
 │   ├── src/
-│   │   ├── config/    # Configuration
-│   │   ├── routes/    # API routes
-│   │   └── index.ts   # Entry point
+│   │   ├── routes/    # API endpoints
+│   │   ├── services/  # Business logic
+│   │   ├── middleware/# Auth, CORS, etc.
+│   │   └── config/    # Database, settings
 │   ├── prisma/        # Database schema
 │   └── Dockerfile
 ├── frontend/          # React + TypeScript UI
 │   ├── src/
 │   │   ├── components/
 │   │   ├── pages/
-│   │   └── App.tsx
+│   │   ├── services/
+│   │   └── stores/
 │   └── Dockerfile
-├── nginx/             # Nginx configuration
+├── nginx/             # Reverse proxy config
 ├── docker-compose.yml
 └── README.md
 ```
 
-## 🗄️ Database Schema
-
-The application uses PostgreSQL with Prisma ORM:
-
-- **Users** - Authentication and authorization
-- **Libraries** - Media collections (Movies, TV Shows, etc.)
-- **MediaItems** - Movies and Series with metadata
-- **Seasons/Episodes** - TV show structure
-- **VideoFiles** - Physical file information
-- **WatchProgress** - Resume playback tracking
-- **WatchHistory** - Viewing history
-- **Watchlist** - User favorites
-
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-| `JWT_SECRET` | Secret for JWT tokens | Required |
-| `TMDB_API_KEY` | TheMovieDB API key | Optional |
+| `DATABASE_URL` | PostgreSQL connection string | (required) |
+| `JWT_SECRET` | Secret for JWT tokens | (required) |
+| `TMDB_API_KEY` | The Movie Database API key | (optional) |
 | `MEDIA_ROOT` | Path to media files | `/media` |
-| `PORT` | Backend port | `3000` |
+| `TRANSCODE_ROOT` | Path for transcoding temp files | `/transcode` |
 | `LOG_LEVEL` | Logging level | `info` |
+| `SCAN_ON_STARTUP` | Scan libraries on startup | `true` |
 
-### Media Libraries
+### Hardware Acceleration
 
-Supported library types:
-- MOVIES
-- SERIES
-- ANIME
-- CARTOONS
-- DOCUMENTARIES
-- MUSIC
-- PHOTOS
+For GPU-accelerated transcoding, set in `.env`:
 
-## 📺 Smart TV Usage
+```bash
+# NVIDIA GPU
+HARDWARE_ACCELERATION=nvidia
 
-The interface is optimized for TV use:
+# Intel Quick Sync
+HARDWARE_ACCELERATION=qsv
 
-- **Arrow Keys** - Navigate between items
-- **Enter/OK** - Select/Play
-- **Back/Escape** - Go back
-- **Space** - Play/Pause
-- **Left/Right** - Seek in player
+# VAAPI (AMD/Intel)
+HARDWARE_ACCELERATION=vaapi
+```
 
-### Tips for TV:
-1. Use a modern TV browser (WebOS, Tizen, Android TV)
-2. Connect via LAN for best performance
-3. Use direct play when possible (no transcoding)
-
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
@@ -142,17 +149,18 @@ The interface is optimized for TV use:
 - `GET /api/movies` - List movies
 - `GET /api/movies/:id` - Get movie details
 - `GET /api/series` - List series
-- `GET /api/series/:id` - Get series with seasons/episodes
-- `GET /api/episodes/:id` - Get episode details
+- `GET /api/series/:id` - Get series details
+- `GET /api/series/:id/seasons` - Get seasons
+- `GET /api/seasons/:id/episodes` - Get episodes
 
 ### Playback
 - `POST /api/playback/progress` - Update watch progress
 - `GET /api/playback/continue-watching` - Get continue watching list
-- `GET /api/playback/history` - Get watch history
+- `GET /api/playback/watchlist` - Get watchlist
 - `POST /api/playback/watchlist/:id` - Toggle watchlist
 
 ### Search
-- `GET /api/search?q=query` - Global search
+- `GET /api/search?q=query` - Search content
 
 ### Admin
 - `GET /api/admin/dashboard` - Dashboard stats
@@ -160,114 +168,48 @@ The interface is optimized for TV use:
 - `POST /api/admin/scan/:libraryId` - Start library scan
 - `GET /api/admin/users` - List users (admin)
 
-## 🛠️ Development
+## Smart TV Usage
 
-### Backend
+The interface is optimized for TV use:
 
+- **Arrow Keys** - Navigate
+- **Enter** - Select/Play
+- **Back/Esc** - Go back
+- **Space** - Play/Pause
+- **Left/Right** - Seek ±10 seconds
+
+## Troubleshooting
+
+### Database Connection Issues
 ```bash
-cd backend
-npm install
-npm run dev
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Database Migrations
-
-```bash
-cd backend
-npx prisma migrate dev
-npx prisma generate
-```
-
-### Seed Data
-
-```bash
-cd backend
-npm run prisma:seed
-```
-
-Default users after seeding:
-- Admin: `admin@aether.local` / `admin123`
-- User: `user@aether.local` / `user123`
-
-## 🎥 Video Streaming
-
-Aether supports multiple streaming methods:
-
-1. **Direct Play** - Original file served directly (best quality)
-2. **Direct Stream** - Remuxing container only
-3. **Transcoding** - Full video/audio transcoding (requires FFmpeg)
-
-### Supported Formats
-
-**Video:** MP4, MKV, AVI, MOV, WebM
-**Audio:** AAC, AC3, EAC3, DTS, FLAC, MP3
-**Subtitles:** SRT, ASS, SSA, WebVTT
-
-## 🔒 Security
-
-- Password hashing with bcrypt
-- JWT-based authentication
-- Role-based access control (Admin/User)
-- CORS protection
-- Input validation with Zod
-- SQL injection prevention (Prisma ORM)
-
-## 📊 System Requirements
-
-**Minimum:**
-- 2 GB RAM
-- Dual-core CPU
-- 10 GB storage
-
-**Recommended:**
-- 4+ GB RAM
-- Quad-core CPU
-- SSD for database
-- Hardware acceleration for transcoding (optional)
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Backend won't start:**
-```bash
-docker compose logs backend
-# Check DATABASE_URL and JWT_SECRET in .env
-```
-
-**No metadata/posters:**
-- Add TMDB_API_KEY to .env
-- Restart backend container
-
-**Video playback issues:**
-- Check MEDIA_ROOT path permissions
-- Verify file format compatibility
-- Check browser console for errors
-
-**Database connection failed:**
-```bash
-docker compose restart postgres
 docker compose logs postgres
+docker compose restart postgres
 ```
 
-## 📝 License
+### Scanner Not Finding Media
+- Ensure media paths are correctly mounted in docker-compose.yml
+- Check file permissions: `chmod -R 755 /path/to/media`
+- Run manual scan from admin panel
 
-MIT License - see LICENSE file for details.
+### Transcoding Issues
+- Verify FFmpeg is installed in backend container
+- Check available disk space in transcode volume
+- Review logs: `docker compose logs backend`
 
-## 🤝 Contributing
+## Backup
 
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+Backup these volumes regularly:
+```bash
+# Database
+docker compose exec postgres pg_dump -U aether aether_db > backup.sql
 
-## 🙏 Acknowledgments
+# Or backup the entire postgres_data volume
+```
 
-- Inspired by Jellyfin and Plex
-- Metadata provided by TheMovieDB
-- Built with Fastify, React, and Prisma
+## License
+
+MIT License - See LICENSE file for details
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines first.
