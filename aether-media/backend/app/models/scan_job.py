@@ -111,8 +111,13 @@ class ScanJob(Base):
         nullable=True,
     )
 
-    current_item: Mapped[Optional[str]] = mapped_column(
-        String(512),
+    current_file: Mapped[Optional[str]] = mapped_column(
+        String(1024),
+        nullable=True,
+    )
+
+    error_message: Mapped[Optional[str]] = mapped_column(
+        String(1024),
         nullable=True,
     )
 
