@@ -47,9 +47,6 @@ export async function adminRoutes(fastify: FastifyInstance) {
     const jobs = await prisma.scanJob.findMany({
       orderBy: { startedAt: 'desc' },
       take: 50,
-      include: {
-        library: true,
-      },
     });
     
     reply.send(jobs);
@@ -112,9 +109,6 @@ export async function adminRoutes(fastify: FastifyInstance) {
     
     const job = await prisma.scanJob.findUnique({
       where: { id },
-      include: {
-        library: true,
-      },
     });
     
     if (!job) {

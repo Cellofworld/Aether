@@ -244,6 +244,8 @@ model WatchHistory {
   endedAt     DateTime?
   playCount   Int      @default(1)
   
+  @@unique([userId, mediaItemId])
+  @@unique([userId, episodeId])
   @@map("watch_history")
 }
 
