@@ -1,33 +1,30 @@
-FROM python:3.12-slim
+FROM node:20-alpine
 
-# Установка системных зависимостей
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    ffprobe \
-    git \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Install FFmpeg and other dependencies
+RUN apk add --no-cache ffmpeg
 
-# Рабочая директория
 WORKDIR /app
 
-# Копирование requirements и установка зависимостей
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy package files
+COPY package*.json ./
 
-# Копирование кода приложения
-COPY . .
+# Install dependencies
+RUN npm ci --only=production
 
-# Создание директорий для кэша и транскодинга
-RUN mkdir -p /app/cache/images /transcode
+# Copy Prisma schema and generate client
+COPY prisma ./prisma/
+RUN npx prisma generate
 
-# Переменные окружения по умолчанию
-ENV PYTHONPATH=/app
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Copy application code
+COPY src ./src/
+COPY tsconfig.json ./
 
-# Порт приложения
-EXPOSE 8000
+# Build TypeScript
+RUN npm run build
 
-# Запуск приложения
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Create necessary directories
+RUN mkdir -p /transcode
+
+EXPOSE 3000
+
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

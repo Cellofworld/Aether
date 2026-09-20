@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: aether-postgres
     environment:
       POSTGRES_USER: aether
@@ -14,46 +14,32 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U aether"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: aether-redis
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    networks:
-      - aether-network
-    restart: unless-stopped
-
-  # Backend API
+  # Backend API (Node.js)
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: aether-backend
     environment:
-      DATABASE_URL: postgresql://aether:aether_password@postgres:5432/aether_db
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
+      DATABASE_URL: postgresql://aether:aether_password@postgres:5432/aether_db?schema=public
+      JWT_SECRET: ${JWT_SECRET:-changeme-in-production-12345}
       TMDB_API_KEY: ${TMDB_API_KEY:-}
       MEDIA_ROOT: /media
       TRANSCODE_ROOT: /transcode
-      CACHE_ROOT: /cache
-      TRANSCODING_ENABLED: ${TRANSCODING_ENABLED:-true}
-      HARDWARE_ACCELERATION: ${HARDWARE_ACCELERATION:-none}
+      LOG_LEVEL: info
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGINS: "*"
     volumes:
       - ${MEDIA_ROOT:-./media}:/media:ro
       - transcode_data:/transcode
-      - cache_data:/cache
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_started
     networks:
       - aether-network
     restart: unless-stopped
@@ -64,6 +50,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: aether-frontend
+    depends_on:
+      - backend
     networks:
       - aether-network
     restart: unless-stopped
@@ -89,6 +77,4 @@ networks:
 
 volumes:
   postgres_data:
-  redis_data:
   transcode_data:
-  cache_data:
