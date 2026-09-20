@@ -1,249 +1,173 @@
-# Aether Media Server
+# 🎬 Aether Media Server
 
-Полноценный домашний медиасервер с современным веб-интерфейсом, вдохновленный Jellyfin/Plex.
+A modern, self-hosted media server inspired by Jellyfin/Plex, built with Node.js, React, and PostgreSQL.
 
-## Возможности
+![Aether Media Server](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-- 📁 **Автоматическое сканирование** библиотек (фильмы, сериалы, аниме, мультфильмы)
-- 🎬 **Красивая библиотека** с постерами, описаниями, рейтингами и метаданными
-- ▶️ **Воспроизведение в браузере** с поддержкой субтитров и аудиодорожек
-- 📺 **Smart TV-friendly** интерфейс с управлением с пульта
-- ⏸️ **Продолжение просмотра** с места остановки
-- 🔍 **Поиск** по всей медиатеке
-- 📂 **Категории и фильтры**
-- 👤 **Авторизация** и разделение пользователей
-- 🔄 **Автоматическое обновление** библиотеки
-- 🌐 **Работа в локальной сети**
-- 🐳 **Docker Compose** для простого запуска
+## ✨ Features
 
-## Быстрый старт
+- **📚 Media Library Management** - Organize movies, TV shows, anime, and more
+- **🎭 Rich Metadata** - Automatic metadata from TMDB (posters, descriptions, ratings)
+- **📺 Smart TV Friendly** - Optimized UI for TV browsers and remote controls
+- **▶️ Video Playback** - Direct play with resume functionality
+- **🔍 Search & Filter** - Find content quickly with powerful search
+- **👥 Multi-User Support** - Individual watch progress and playlists
+- **📱 Responsive Design** - Works on desktop, tablet, mobile, and TV
+- **🐳 Docker Ready** - Easy deployment with Docker Compose
 
-### Требования
+## 🚀 Quick Start
 
-- Docker и Docker Compose
-- Минимум 2GB RAM
-- Место на диске для медиафайлов
+### Prerequisites
 
-### Установка
+- Docker & Docker Compose
+- Node.js 20+ (for local development)
+- FFmpeg (for transcoding, optional)
 
-1. Клонируйте репозиторий:
-```bash
-git clone <repository-url> aether-media-server
-cd aether-media-server
-```
+### Installation
 
-2. Создайте файл `.env`:
-```bash
-cp .env.example .env
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/aether-media-server.git
+   cd aether-media-server
+   ```
 
-3. Отредактируйте `.env` и укажите:
-- `TMDB_API_KEY` - API ключ от The Movie Database (бесплатно на themoviedb.org)
-- `JWT_SECRET` - случайная строка для JWT токенов
-- `MEDIA_ROOT` - путь к вашей медиатеке (по умолчанию `/media`)
+2. **Create environment file:**
+   ```bash
+   cp .env.example .env
+   ```
 
-4. Запустите сервер:
-```bash
-docker compose up -d
-```
+3. **Edit `.env` and set your values:**
+   - Change `JWT_SECRET` to a random string
+   - Add your TMDB API key (optional, get from https://www.themoviedb.org)
+   - Set `MEDIA_ROOT` to your media directory
 
-5. Откройте в браузере:
-```
-http://localhost:80
-```
+4. **Start the server:**
+   ```bash
+   docker compose up -d
+   ```
 
-Или по IP вашего сервера:
-```
-http://192.168.1.XX
-```
+5. **Access the application:**
+   - Open http://localhost in your browser
+   - Default admin credentials: `admin@aether.local` / `admin123`
 
-### Учетные данные по умолчанию
-
-- **Логин**: `admin`
-- **Пароль**: `admin123`
-
-## Структура проекта
+## 📁 Directory Structure
 
 ```
 aether-media-server/
-├── backend/           # FastAPI backend
-│   ├── app/
-│   │   ├── api/       # API routes
-│   │   ├── core/      # Конфигурация, безопасность
-│   │   ├── models/    # SQLAlchemy модели
-│   │   ├── schemas/   # Pydantic схемы
-│   │   ├── services/  # Бизнес-логика
-│   │   ├── workers/   # Фоновые задачи (сканер)
-│   │   └── main.py    # Точка входа
-│   ├── migrations/    # Alembic миграции
-│   └── requirements.txt
-├── frontend/          # React + TypeScript frontend
+├── backend/           # Node.js + Fastify API
+│   ├── src/
+│   │   ├── config/    # Configuration
+│   │   ├── routes/    # API routes
+│   │   └── index.ts   # Entry point
+│   ├── prisma/        # Database schema
+│   └── Dockerfile
+├── frontend/          # React + TypeScript UI
 │   ├── src/
 │   │   ├── components/
 │   │   ├── pages/
-│   │   ├── layouts/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── stores/
-│   │   └── types/
-│   └── package.json
+│   │   └── App.tsx
+│   └── Dockerfile
+├── nginx/             # Nginx configuration
 ├── docker-compose.yml
 └── README.md
 ```
 
-## Настройка библиотек
+## 🗄️ Database Schema
 
-После первого входа:
+The application uses PostgreSQL with Prisma ORM:
 
-1. Перейдите в **Админка** → **Библиотеки**
-2. Нажмите **Добавить библиотеку**
-3. Выберите тип (Фильмы, Сериалы, Аниме, etc.)
-4. Укажите путь к папке с медиа (например, `/media/movies`)
-5. Нажмите **Сохранить**
-6. Запустите **Сканирование**
+- **Users** - Authentication and authorization
+- **Libraries** - Media collections (Movies, TV Shows, etc.)
+- **MediaItems** - Movies and Series with metadata
+- **Seasons/Episodes** - TV show structure
+- **VideoFiles** - Physical file information
+- **WatchProgress** - Resume playback tracking
+- **WatchHistory** - Viewing history
+- **Watchlist** - User favorites
 
-### Рекомендуемая структура папок
+## 🔧 Configuration
 
-```
-/media/
-├── movies/
-│   ├── Interstellar (2014)/
-│   │   └── Interstellar.2014.1080p.mkv
-│   └── The Matrix (1999)/
-│       └── The.Matrix.1999.4K.mkv
-├── series/
-│   ├── Breaking Bad/
-│   │   ├── Season 01/
-│   │   │   ├── S01E01.mkv
-│   │   │   └── S01E02.mkv
-│   │   └── Season 02/
-│   └── The Mandalorian/
-└── anime/
-```
+### Environment Variables
 
-## API Документация
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `JWT_SECRET` | Secret for JWT tokens | Required |
+| `TMDB_API_KEY` | TheMovieDB API key | Optional |
+| `MEDIA_ROOT` | Path to media files | `/media` |
+| `PORT` | Backend port | `3000` |
+| `LOG_LEVEL` | Logging level | `info` |
 
-После запуска API документация доступна по адресу:
-```
-http://localhost:80/api/docs
-```
+### Media Libraries
 
-### Основные endpoints
+Supported library types:
+- MOVIES
+- SERIES
+- ANIME
+- CARTOONS
+- DOCUMENTARIES
+- MUSIC
+- PHOTOS
 
-| Метод | Endpoint | Описание |
-|-------|----------|----------|
-| POST | `/api/auth/login` | Вход |
-| GET | `/api/libraries` | Список библиотек |
-| GET | `/api/movies` | Фильмы |
-| GET | `/api/series` | Сериалы |
-| GET | `/api/search?q=` | Поиск |
-| GET | `/api/playback/continue` | Продолжить просмотр |
-| POST | `/api/playback/progress` | Обновить прогресс |
-| POST | `/api/admin/scan` | Запустить сканирование |
+## 📺 Smart TV Usage
 
-## Управление воспроизведением
+The interface is optimized for TV use:
 
-### Клавиатура / Пульт
+- **Arrow Keys** - Navigate between items
+- **Enter/OK** - Select/Play
+- **Back/Escape** - Go back
+- **Space** - Play/Pause
+- **Left/Right** - Seek in player
 
-| Кнопка | Действие |
-|--------|----------|
-| ← → | Навигация / Перемотка |
-| ↑ ↓ | Навигация |
-| Enter / Space | Выбрать / Play-Pause |
-| Escape / Back | Назад |
-| Shift + ← | -10 секунд |
-| Shift + → | +10 секунд |
+### Tips for TV:
+1. Use a modern TV browser (WebOS, Tizen, Android TV)
+2. Connect via LAN for best performance
+3. Use direct play when possible (no transcoding)
 
-## Транскодинг
+## 🔌 API Endpoints
 
-Сервер поддерживает:
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Get current user
 
-- **Direct Play** - если устройство поддерживает формат
-- **Remux** - смена контейнера без перекодирования
-- **Transcoding** - полное перекодирование через FFmpeg
+### Libraries
+- `GET /api/libraries` - List all libraries
+- `GET /api/libraries/:id` - Get library details
+- `POST /api/libraries` - Create library (admin)
+- `GET /api/libraries/:id/items` - Get library items
 
-### Настройка транскодинга
+### Media
+- `GET /api/movies` - List movies
+- `GET /api/movies/:id` - Get movie details
+- `GET /api/series` - List series
+- `GET /api/series/:id` - Get series with seasons/episodes
+- `GET /api/episodes/:id` - Get episode details
 
-В `.env`:
-```
-TRANSCODING_ENABLED=true
-HARDWARE_ACCELERATION=none  # none, nvidia, vaapi, qsv
-```
+### Playback
+- `POST /api/playback/progress` - Update watch progress
+- `GET /api/playback/continue-watching` - Get continue watching list
+- `GET /api/playback/history` - Get watch history
+- `POST /api/playback/watchlist/:id` - Toggle watchlist
 
-### Аппаратное ускорение
+### Search
+- `GET /api/search?q=query` - Global search
 
-#### NVIDIA NVENC
-```
-HARDWARE_ACCELERATION=nvidia
-```
+### Admin
+- `GET /api/admin/dashboard` - Dashboard stats
+- `GET /api/admin/jobs` - List scan jobs
+- `POST /api/admin/scan/:libraryId` - Start library scan
+- `GET /api/admin/users` - List users (admin)
 
-#### Intel Quick Sync
-```
-HARDWARE_ACCELERATION=qsv
-```
-
-#### VAAPI (AMD/Intel)
-```
-HARDWARE_ACCELERATION=vaapi
-```
-
-## Резервное копирование
-
-Что нужно бэкапить:
-
-1. **База данных PostgreSQL**:
-```bash
-docker compose exec postgres pg_dump -U aether aether_db > backup.sql
-```
-
-2. **Папка с настройками**:
-```bash
-tar -czf settings-backup.tar.gz ./backend/app/data
-```
-
-Медиафайлы не требуют бэкапа через приложение.
-
-## Troubleshooting
-
-### Сервер не запускается
-
-Проверьте логи:
-```bash
-docker compose logs -f
-```
-
-### Ошибки сканирования
-
-Убедитесь, что:
-- Пути к медиа указаны правильно
-- У контейнера есть доступ к файлам
-- Форматы файлов поддерживаются
-
-### Проблемы с воспроизведением
-
-- Проверьте поддержку кодеков вашим устройством
-- Включите транскодинг в настройках
-- Попробуйте другой браузер
-
-## Smart TV Setup
-
-1. Откройте браузер на TV
-2. Перейте по адресу сервера (например, `http://192.168.1.100`)
-3. Используйте пульт для навигации:
-   - Стрелки для перемещения
-   - OK/Enter для выбора
-   - Back/Return для возврата
-
-## Разработка
+## 🛠️ Development
 
 ### Backend
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+npm install
+npm run dev
 ```
 
 ### Frontend
@@ -254,29 +178,96 @@ npm install
 npm run dev
 ```
 
-## Технологии
+### Database Migrations
 
-### Backend
-- Python 3.12+
-- FastAPI
-- SQLAlchemy 2
-- PostgreSQL
-- FFmpeg
-- Pydantic
+```bash
+cd backend
+npx prisma migrate dev
+npx prisma generate
+```
 
-### Frontend
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-- Zustand
-- React Router
-- TanStack Query
+### Seed Data
 
-## Лицензия
+```bash
+cd backend
+npm run prisma:seed
+```
 
-MIT License
+Default users after seeding:
+- Admin: `admin@aether.local` / `admin123`
+- User: `user@aether.local` / `user123`
 
-## Поддержка
+## 🎥 Video Streaming
 
-Для вопросов и предложений создавайте Issues на GitHub.
+Aether supports multiple streaming methods:
+
+1. **Direct Play** - Original file served directly (best quality)
+2. **Direct Stream** - Remuxing container only
+3. **Transcoding** - Full video/audio transcoding (requires FFmpeg)
+
+### Supported Formats
+
+**Video:** MP4, MKV, AVI, MOV, WebM
+**Audio:** AAC, AC3, EAC3, DTS, FLAC, MP3
+**Subtitles:** SRT, ASS, SSA, WebVTT
+
+## 🔒 Security
+
+- Password hashing with bcrypt
+- JWT-based authentication
+- Role-based access control (Admin/User)
+- CORS protection
+- Input validation with Zod
+- SQL injection prevention (Prisma ORM)
+
+## 📊 System Requirements
+
+**Minimum:**
+- 2 GB RAM
+- Dual-core CPU
+- 10 GB storage
+
+**Recommended:**
+- 4+ GB RAM
+- Quad-core CPU
+- SSD for database
+- Hardware acceleration for transcoding (optional)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Backend won't start:**
+```bash
+docker compose logs backend
+# Check DATABASE_URL and JWT_SECRET in .env
+```
+
+**No metadata/posters:**
+- Add TMDB_API_KEY to .env
+- Restart backend container
+
+**Video playback issues:**
+- Check MEDIA_ROOT path permissions
+- Verify file format compatibility
+- Check browser console for errors
+
+**Database connection failed:**
+```bash
+docker compose restart postgres
+docker compose logs postgres
+```
+
+## 📝 License
+
+MIT License - see LICENSE file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+
+## 🙏 Acknowledgments
+
+- Inspired by Jellyfin and Plex
+- Metadata provided by TheMovieDB
+- Built with Fastify, React, and Prisma

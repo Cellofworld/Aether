@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  watchProgress WatchProgress[]
+  watchHistory  WatchHistory[]
+  watchlist     Watchlist[]
+  
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model Library {
+  id          String   @id @default(uuid())
+  name        String
+  type        LibraryType
+  paths       String[] // Array of paths
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  mediaItems  MediaItem[]
+  
+  @@map("libraries")
+}
+
+enum LibraryType {
+  MOVIES
+  SERIES
+  ANIME
+  CARTOONS
+  DOCUMENTARIES
+  MUSIC
+  PHOTOS
+}
+
+model MediaItem {
+  id          String   @id @default(uuid())
+  libraryId   String
+  library     Library  @relation(fields: [libraryId], references: [id])
+  type        MediaType
+  title       String
+  originalTitle String?
+  overview    String?
+  releaseDate DateTime?
+  runtime     Int? // in minutes
+  rating      Float?
+  genres      String[]
+  backdropPath String?
+  posterPath  String?
+  tmdbId      Int?
+  imdbId      String?
+  status      MediaStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations based on type
+  movie       Movie?
+  series      Series?
+  
+  videoFiles  VideoFile[]
+  watchProgress WatchProgress[]
+  watchHistory  WatchHistory[]
+  watchlist     Watchlist[]
+  
+  @@map("media_items")
+}
+
+enum MediaType {
+  MOVIE
+  SERIES
+}
+
+enum MediaStatus {
+  PENDING
+  PROCESSING
+  READY
+  ERROR
+  NEEDS_REVIEW
+}
+
+model Movie {
+  id          String   @id @default(uuid())
+  mediaItemId String   @unique
+  mediaItem   MediaItem @relation(fields: [mediaItemId], references: [id])
+  tagline     String?
+  
+  @@map("movies")
+}
+
+model Series {
+  id          String   @id @default(uuid())
+  mediaItemId String   @unique
+  mediaItem   MediaItem @relation(fields: [mediaItemId], references: [id])
+  numberOfSeasons Int?
+  numberOfEpisodes Int?
+  
+  seasons     Season[]
+  
+  @@map("series")
+}
+
+model Season {
+  id          String   @id @default(uuid())
+  seriesId    String
+  series      Series   @relation(fields: [seriesId], references: [id])
+  seasonNumber Int
+  title       String?
+  overview    String?
+  airDate     DateTime?
+  posterPath  String?
+  
+  episodes    Episode[]
+  
+  @@unique([seriesId, seasonNumber])
+  @@map("seasons")
+}
+
+model Episode {
+  id          String   @id @default(uuid())
+  seasonId    String
+  season      Season   @relation(fields: [seasonId], references: [id])
+  episodeNumber Int
+  title       String
+  overview    String?
+  airDate     DateTime?
+  runtime     Int? // in minutes
+  stillPath   String?
+  
+  videoFiles  VideoFile[]
+  watchProgress WatchProgress[]
+  watchHistory  WatchHistory[]
+  
+  @@unique([seasonId, episodeNumber])
+  @@map("episodes")
+}
+
+model VideoFile {
+  id          String   @id @default(uuid())
+  path        String   @unique
+  filename    String
+  size        BigInt
+  mimeType    String
+  duration    Int? // in seconds
+  width       Int?
+  height      Int?
+  codec       String?
+  bitrate     Int?
+  framerate   Float?
+  hdr         Boolean  @default(false)
+  
+  mediaItemId String?
+  mediaItem   MediaItem? @relation(fields: [mediaItemId], references: [id])
+  
+  episodeId   String?
+  episode     Episode? @relation(fields: [episodeId], references: [id])
+  
+  audioTracks AudioTrack[]
+  subtitleTracks SubtitleTrack[]
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("video_files")
+}
+
+model AudioTrack {
+  id          String   @id @default(uuid())
+  videoFileId String
+  videoFile   VideoFile @relation(fields: [videoFileId], references: [id])
+  index       Int
+  language    String?
+  codec       String?
+  channels    Int?
+  bitrate     Int?
+  title       String?
+  default     Boolean  @default(false)
+  
+  @@map("audio_tracks")
+}
+
+model SubtitleTrack {
+  id          String   @id @default(uuid())
+  videoFileId String
+  videoFile   VideoFile @relation(fields: [videoFileId], references: [id])
+  index       Int
+  language    String?
+  codec       String? // SRT, ASS, WebVTT, etc.
+  path        String? // External subtitle path
+  embedded    Boolean  @default(true)
+  default     Boolean  @default(false)
+  
+  @@map("subtitle_tracks")
+}
+
+model WatchProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  mediaItemId String?
+  mediaItem   MediaItem? @relation(fields: [mediaItemId], references: [id])
+  
+  episodeId   String?
+  episode     Episode? @relation(fields: [episodeId], references: [id])
+  
+  position    Int      // in seconds
+  duration    Int      // in seconds
+  watched     Boolean  @default(false)
+  lastWatched DateTime @default(now())
+  
+  @@unique([userId, mediaItemId, episodeId])
+  @@map("watch_progress")
+}
+
+model WatchHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  mediaItemId String?
+  mediaItem   MediaItem? @relation(fields: [mediaItemId], references: [id])
+  
+  episodeId   String?
+  episode     Episode? @relation(fields: [episodeId], references: [id])
+  
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  playCount   Int      @default(1)
+  
+  @@map("watch_history")
+}
+
+model Watchlist {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  mediaItemId String
+  mediaItem   MediaItem @relation(fields: [mediaItemId], references: [id])
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, mediaItemId])
+  @@map("watchlist")
+}
+
+model ScanJob {
+  id          String   @id @default(uuid())
+  libraryId   String?
+  status      JobStatus @default(PENDING)
+  progress    Int      @default(0)
+  total       Int      @default(0)
+  currentFile String?
+  added       Int      @default(0)
+  updated     Int      @default(0)
+  removed     Int      @default(0)
+  errors      String[]
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  @@map("scan_jobs")
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
