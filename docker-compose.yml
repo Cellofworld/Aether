@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: aether-postgres
+    environment:
+      POSTGRES_USER: aether
+      POSTGRES_PASSWORD: aether_password
+      POSTGRES_DB: aether_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aether-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aether"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: aether-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - aether-network
+    restart: unless-stopped
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aether-backend
+    environment:
+      DATABASE_URL: postgresql://aether:aether_password@postgres:5432/aether_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
+      TMDB_API_KEY: ${TMDB_API_KEY:-}
+      MEDIA_ROOT: /media
+      TRANSCODE_ROOT: /transcode
+      CACHE_ROOT: /cache
+      TRANSCODING_ENABLED: ${TRANSCODING_ENABLED:-true}
+      HARDWARE_ACCELERATION: ${HARDWARE_ACCELERATION:-none}
+    volumes:
+      - ${MEDIA_ROOT:-./media}:/media:ro
+      - transcode_data:/transcode
+      - cache_data:/cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - aether-network
+    restart: unless-stopped
+
+  # Frontend (Production build served by Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aether-frontend
+    networks:
+      - aether-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: aether-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - aether-network
+    restart: unless-stopped
+
+networks:
+  aether-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  transcode_data:
+  cache_data:
