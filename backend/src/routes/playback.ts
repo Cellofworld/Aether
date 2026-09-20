@@ -60,44 +60,54 @@ export async function playbackRoutes(fastify: FastifyInstance) {
         });
         
         if (episode) {
-          await prisma.watchHistory.upsert({
-            where: {
-              userId_episodeId: {
+          // Check if history exists
+          const existingHistory = await prisma.watchHistory.findFirst({
+            where: { userId, episodeId },
+          });
+          
+          if (existingHistory) {
+            await prisma.watchHistory.update({
+              where: { id: existingHistory.id },
+              data: {
+                endedAt: watched ? new Date() : null,
+                playCount: { increment: watched ? 1 : 0 },
+              },
+            });
+          } else {
+            await prisma.watchHistory.create({
+              data: {
                 userId,
                 episodeId,
+                startedAt: new Date(),
+                endedAt: watched ? new Date() : null,
               },
-            },
-            update: {
+            });
+          }
+        }
+      } else if (mediaItemId) {
+        // Check if history exists
+        const existingHistory = await prisma.watchHistory.findFirst({
+          where: { userId, mediaItemId },
+        });
+        
+        if (existingHistory) {
+          await prisma.watchHistory.update({
+            where: { id: existingHistory.id },
+            data: {
               endedAt: watched ? new Date() : null,
               playCount: { increment: watched ? 1 : 0 },
             },
-            create: {
+          });
+        } else {
+          await prisma.watchHistory.create({
+            data: {
               userId,
-              episodeId,
+              mediaItemId,
               startedAt: new Date(),
               endedAt: watched ? new Date() : null,
             },
           });
         }
-      } else if (mediaItemId) {
-        await prisma.watchHistory.upsert({
-          where: {
-            userId_mediaItemId: {
-              userId,
-              mediaItemId,
-            },
-          },
-          update: {
-            endedAt: watched ? new Date() : null,
-            playCount: { increment: watched ? 1 : 0 },
-          },
-          create: {
-            userId,
-            mediaItemId,
-            startedAt: new Date(),
-            endedAt: watched ? new Date() : null,
-          },
-        });
       }
       
       reply.send(progress);
